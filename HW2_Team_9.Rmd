@@ -38,62 +38,117 @@ library(msm)
 ```
 
 ## Question 1:
-**Load again the data in R. In homework 1, we noticed that the relationship between unit_price and distance appeared to be exponential. This suggests that using the logarithm of distance instead of distance might help. Plot unit_price against the logarithm of distance. Does the relationship between these two variables look more linear?**
+
+**Load again the data in R. In homework 1, we noticed that the relationship between `unit_price` and `distance` appeared to be exponential. This suggests that using the logarithm of `distance` instead of `distance` might help. Plot `unit_price` against the logarithm of `distance`. Does the relationship between these two variables look more linear?**
 
 ```{r}
 df <- read.csv("real-estate-valuation-data-set.csv")
 glimpse(df)
 ```
+
 ```{r}
 head(df, 5)
 ```
 
+```{r}
+#Regression containing the log of the variable distance as predictor
+lm_fit_log <- lm(unit_price ~ distance +  log(distance), data = df)
+
+#Scatter plot of unit price vs distance
+plot(unit_price ~ distance, data = df)
+
+#Legend with extra information
+legend("topright", legend=paste("log R2: ", format(summary(lm_fit_log)$r.squared,digits=3)))
+
+pred_points <- seq(0, 7000, by = 100)
+lines(
+    pred_points,
+    predict(lm_fit_log, data.frame(distance = pred_points)),
+    col = "purple",
+    lwd = 3
+)
+
+grid(nx = NULL, ny = NULL,
+     lty = 2, col = "gray", lwd = 2)
+title(main = "Unit Price Vs Distance ")
+```
+
+It seems that the logarithmic transformation of the variable `distance` represents better the relationship between `distance` and `unit_price`.
+
+If transform the variable in the plot we can notice some interesting details:
+
+```{r}
+# Let's try to transform the predictor lstat to improve the model.
+simple_lm_log <- lm(unit_price ~ log(distance), data = df)
+#summary(simple_lm_x) # R squared improved.
+plot(unit_price ~ log(distance), data = df)
+abline(simple_lm_log, col = "purple", lwd = 3)
+
+grid(nx = NULL, ny = NULL,
+     lty = 2, col = "gray", lwd = 2)
+
+title(main = "Unit Price Vs log Distance Transform")
+```
+
 ## Question 2:
+
 **Fit a multiple linear regression model of unit_price on convenience_stores and on the logarithm of distance.**
 
-
 ## Question 3:
+
 **Plot the standardized residuals of this model against the predictor convenience_stores. Comment on the diagnostic plot. Do you see anything suspicious that might indicate problems with the model?**
 
-
 ## Question 4:
+
 **Plot the standardized residuals of this model against the predictor logarithm of distance. Comment on the diagnostic plot. Do you see anything suspicious that might indicate problems with the model?**
 
-
 ## Question 5:
+
 **Plot the standardized residuals of this model against the fitted values of unit_price. Comment on the diagnostic plot. Do you see anything suspicious that might indicate problems with the model?**
 
-
 ## Question 6:
+
 **Plot the quantile-quantile plot of the standardized model residuals. Comment on the diagnostic plot. Do you see anything suspicious that might indicate problems with the model?**
 
-
 ## Question 7:
+
 **Apply the Box-Cox method to find the optimal power lambda for the response variable unit_price when the predictors are convenience_stores and the logarithm of distance.**
 
+```{r}
+# Here's a simple function to apply scaled power transformations.
+power_law <- Vectorize(
+    function(t, lambda) {
+        if (t <= 0) stop("t must be strictly positive")
+        if (lambda != 0) {
+            return((t^lambda - 1) / lambda)
+        }
+        return(log(lambda))
+    },
+    "t"
+)
+```
 
 ## Question 8:
-**Fit a multiple linear regression model of unit_price^lambda (where lambda is the value you found using the Box-Cox method) on convenience_stores and on the logarithm of distance.**
 
+**Fit a multiple linear regression model of unit_price\^lambda (where lambda is the value you found using the Box-Cox method) on convenience_stores and on the logarithm of distance.**
 
 ## Question 9:
+
 **Create the diagnostic plots for this new model and comment on them. Did the Box-Cox method produce any improvements?**
 
-
 ## Question 10:
+
 **Use the influence.measures function to compute the DFBETAs for the two predictors with respect to the model that you fitted in Question 8. Are there observations that are flagged as influential with respect to the DFBETAs scores?**
 
-
 ## Question 11 [Optional]:
-**The data in yeast.csv contains information about the growth of yeast cells in a controlled experimental environment. It contains the following variables:**
--   **day:** the day of the experiment.
--   **count:** the count of yeast cells observed on that day.
 
-1. Read the data in R and plot count onto day.
-2. Are you concerned about heteroskedasticity (i.e., variance that is not constant around the main trend that links count and day)?
-3. Fit the nonlinear regression model.For now, ignore any heteroskedasticity issues you may have detected.
-4. What are your estimates of K, r, and t? Include 95% confidence intervals.
-5. Now that you have a first model, you may be able to model how the variability of count varies as a function of day. Use the following code to bucket the data in weekly groups of observations, compute weekly estimates of the standard deviation of E based on the current model and verify that the standard deviation of E appears to be increasing linearly with time:
-6. Once you have confirmed this, use weighted least squares to refit your previous model accounting for heteroskedasticity. To do so, you can incorporate the parameter.
-7. Compare the two models (unweighted and weighted) by plotting their fit on the data and by comparing their parameter estimates and confidence intervals.
-8. Do you notice large differences? Did accounting for heteroskedasticity produce different results in this case?
+**The data in yeast.csv contains information about the growth of yeast cells in a controlled experimental environment. It contains the following variables:** - **day:** the day of the experiment. - **count:** the count of yeast cells observed on that day.
+
+1.  Read the data in R and plot count onto day.
+2.  Are you concerned about heteroskedasticity (i.e., variance that is not constant around the main trend that links count and day)?
+3.  Fit the nonlinear regression model.For now, ignore any heteroskedasticity issues you may have detected.
+4.  What are your estimates of K, r, and t? Include 95% confidence intervals.
+5.  Now that you have a first model, you may be able to model how the variability of count varies as a function of day. Use the following code to bucket the data in weekly groups of observations, compute weekly estimates of the standard deviation of E based on the current model and verify that the standard deviation of E appears to be increasing linearly with time:
+6.  Once you have confirmed this, use weighted least squares to refit your previous model accounting for heteroskedasticity. To do so, you can incorporate the parameter.
+7.  Compare the two models (unweighted and weighted) by plotting their fit on the data and by comparing their parameter estimates and confidence intervals.
+8.  Do you notice large differences? Did accounting for heteroskedasticity produce different results in this case?
